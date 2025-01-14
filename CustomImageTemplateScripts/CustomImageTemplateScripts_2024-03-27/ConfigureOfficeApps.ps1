@@ -211,51 +211,29 @@ function installOfficeUsingODT($Applications, $Version, $Type) {
             </Configuration>
 '@
 
-        $ODTDownloadLinkRegex = '/officedeploymenttool[a-z0-9_-]*\.exe$'
         $guid = [guid]::NewGuid().Guid
         $tempFolder = (Join-Path -Path "C:\temp\" -ChildPath $guid)
-        $ODTDownloadUrl = 'https://www.microsoft.com/en-us/download/confirmation.aspx?id=49117'
-        $templateFilePathFolder = "C:\AVDImage"
+        $DownloadUrl = 'https://officecdn.microsoft.com/pr/wsus/setup.exe'
+        $setupExePath = Join-Path -Path $tempFolder -ChildPath 'setup.exe'
 
         if (!(Test-Path -Path $tempFolder)) {
-            New-Item -Path $tempFolder -ItemType Directory
+            New-Item -Path $tempFolder -ItemType Directory -Force
         }
 
-        Write-Host "AVD AIB Customization Office Apps : Created temp folder $tempFolder"
+        Write-Host "AVD AIB Customization Office Apps : Set Download Path $tempFolder"
     }
 
     Process {
 
         try {
-         
-            $HttpContent = Invoke-WebRequest -Uri $ODTDownloadUrl -UseBasicParsing
-            
-            if ($HttpContent.StatusCode -ne 200) { 
-                throw "Office Installation script failed to find Office deployment tool link -- Response $($Response.StatusCode) ($($Response.StatusDescription))"
-            }
-
-            $ODTDownloadLinks = $HttpContent.Links | Where-Object { $_.href -Match $ODTDownloadLinkRegex }
-
-            #pick the first link in case there are multiple
-            $ODTToolLink = $ODTDownloadLinks[0].href
-            Write-Host "AVD AIB Customization Office Apps : Office deployment tool link is $ODTToolLink"
-
-            $ODTexePath = Join-Path -Path $tempFolder -ChildPath "officedeploymenttool.exe"
-
             #download office deployment tool
 
-            Write-Host "AVD AIB Customization Office Apps : Downloading ODT tool into folder $ODTexePath"
-            $ODTResponse = Invoke-WebRequest -Uri "$ODTToolLink" -UseBasicParsing -UseDefaultCredentials -OutFile $ODTexePath -PassThru
+            Write-Host "AVD AIB Customization Office Apps : Downloading Setup.exe into folder $tempFolder"
+            $ODTResponse = Invoke-WebRequest -Uri $DownloadUrl -UseBasicParsing -UseDefaultCredentials -OutFile "$setupExePath" -PassThru
 
             if ($ODTResponse.StatusCode -ne 200) { 
                 throw "Office Installation script failed to download Office deployment tool -- Response $($ODTResponse.StatusCode) ($($ODTResponse.StatusDescription))"
             }
-
-            Write-Host "AVD AIB Customization Office Apps : Extracting setup.exe into $tempFolder"
-            # extract setup.exe
-            Start-Process -FilePath $ODTexePath -ArgumentList "/extract:`"$($tempFolder)`" /quiet" -PassThru -Wait -NoNewWindow
-
-            $setupExePath = Join-Path -Path $tempFolder -ChildPath 'setup.exe'
             
             # Construct XML config file for Office Deployment Kit setup.exe
             $xmlFilePath = Join-Path -Path $tempFolder -ChildPath 'installOffice.xml'
@@ -299,10 +277,6 @@ function installOfficeUsingODT($Applications, $Version, $Type) {
         #Cleanup
         if ((Test-Path -Path $tempFolder -ErrorAction SilentlyContinue)) {
             Remove-Item -Path $tempFolder -Force -Recurse -ErrorAction Continue
-        }
-
-        if ((Test-Path -Path $templateFilePathFolder -ErrorAction SilentlyContinue)) {
-            Remove-Item -Path $templateFilePathFolder -Force -Recurse -ErrorAction Continue
         }
 
         $stopwatch.Stop()
