@@ -201,7 +201,7 @@ function installOfficeUsingODT($Applications, $Version, $Type) {
 
         $configXML = @'
             <Configuration>
-            <Add Channel="Monthly">
+            <Add Channel="MonthlyEnterprise">
             </Add>
             <RemoveMSI />
             <Updates Enabled="FALSE" />
