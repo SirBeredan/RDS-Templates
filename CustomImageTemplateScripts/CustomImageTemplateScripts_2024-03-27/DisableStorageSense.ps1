@@ -5,32 +5,6 @@
 #######################################
 #    Disable Storage Sense            #
 #######################################
-
-$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
-Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Disable Storage Sense Start -  $((Get-Date).ToUniversalTime()) "
-
-$registryPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\StorageSense"
-$registryKey = "AllowStorageSenseGlobal"
-$registryValue = "0"
-
-$registryPathWin11 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\StorageSense"
-
-IF(!(Test-Path $registryPath)) {
-    New-Item -Path $registryPath -Force
-}
-
-IF(!(Test-Path $registryPathWin11)) {
-    New-Item -Path $registryPathWin11 -Force
-}
-
-Set-RegKey -registryPath $registryPath -registryKey $registryKey -registryValue $registryValue
-Set-RegKey -registryPath $registryPathWin11 -registryKey $registryKey -registryValue $registryValue
-
-$stopwatch.Stop()
-$elapsedTime = $stopwatch.Elapsed
-Write-Host "*** AVD AIB CUSTOMIZER PHASE: Disable Storage Sense - Exit Code: $LASTEXITCODE ***"
-Write-Host "*** Ending AVD AIB CUSTOMIZER PHASE: Disable Storage Sense - Time taken: $elapsedTime "
-
 function Set-RegKey($registryPath, $registryKey, $registryValue) {
     try {
          Write-Host "*** AVD AIB CUSTOMIZER PHASE ***  Disable Storage Sense - Setting  $registryKey with value $registryValue ***"
@@ -39,7 +13,26 @@ function Set-RegKey($registryPath, $registryKey, $registryValue) {
     catch {
          Write-Host "*** AVD AIB CUSTOMIZER PHASE ***   Disable Storage Sense  - Cannot add the registry key  $registryKey *** : [$($_.Exception.Message)]"
     }
- }
+}
+
+$stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+Write-Host "***Starting AVD AIB CUSTOMIZER PHASE: Disable Storage Sense Start -  $((Get-Date).ToUniversalTime()) "
+
+$registryPaths = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\StorageSense","HKLM:\SOFTWARE\Policies\Microsoft\Windows\StorageSense"
+$registryKey = "AllowStorageSenseGlobal"
+$registryValue = "0"
+
+Foreach($registryPath in $registryPaths){
+    If(!(Test-Path $registryPath)) {
+        New-Item -Path $registryPath -Force
+    }
+    Set-RegKey -registryPath $registryPath -registryKey $registryKey -registryValue $registryValue
+}
+
+$stopwatch.Stop()
+$elapsedTime = $stopwatch.Elapsed
+Write-Host "*** AVD AIB CUSTOMIZER PHASE: Disable Storage Sense - Exit Code: $LASTEXITCODE ***"
+Write-Host "*** Ending AVD AIB CUSTOMIZER PHASE: Disable Storage Sense - Time taken: $elapsedTime "
 
 #############
 #    END    #
