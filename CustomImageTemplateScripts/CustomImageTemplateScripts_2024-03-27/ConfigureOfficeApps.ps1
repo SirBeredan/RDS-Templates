@@ -220,7 +220,7 @@ function installOfficeUsingODT($Applications, $Version, $Type) {
             New-Item -Path $tempFolder -ItemType Directory -Force
         }
 
-        Write-Host "AVD AIB Customization Office Apps : Set Download Path $tempFolder"
+        Write-Host "AVD AIB Customization Office Apps : Created temp folder $tempFolder"
     }
 
     Process {
